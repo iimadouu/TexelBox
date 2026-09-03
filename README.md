@@ -4,7 +4,7 @@
 
 **One app. Eight tools. The entire texture pipeline for game developers.**
 
-Stop jumping between GIMP, standalone normal-map generators, and texture atlas packers. TexelBox handles everything from raw source image to game-ready export — in one fast, native Windows app.
+Stop jumping between diffrent services and softwares, standalone normal-map generators, and texture atlas packers. TexelBox handles everything from raw source image to game-ready export — in one fast, native Windows app.
 
 [Download](https://github.com/iimadouu/TexelBox/releases) · [Features & Pricing](https://texelbox-license.imadedar98.workers.dev/pricing) · [Support](mailto:imadedar98@gmail.com)
 
@@ -19,8 +19,6 @@ TexelBox is a **lightweight, native Windows app** for game developers who need t
 No subscriptions. No bloat. No jumping between five different tools. Just open an image, run through the pipeline, export.
 
 **Who's this for?** Indie devs, hobbyists, and technical artists who want professional textures without the Substance Designer learning curve.
-
-**What this is NOT:** A node-based shader editor, sculpting tool, or asset library. We're a shortcut tool — fast, focused, and affordable.
 
 ---
 
@@ -74,12 +72,6 @@ The whole pipeline flows together automatically. Maps output feeds straight into
 
 ---
 
-## Download
-
-1. Grab the latest `texelbox-setup.exe` from [Releases](https://github.com/iimadouu/texelbox/releases)
-2. Run the installer (Inno Setup — opt-in desktop icon, x64 only)
-3. Launch — opens maximized and adapts to any screen
-
 **System requirements:** Windows 10/11, 64-bit.
 
 ---
@@ -98,7 +90,7 @@ The whole pipeline flows together automatically. Maps output feeds straight into
 3. Download texelbox installer
 4. Open **Settings** → enter email, password, and license key
 5. Click **Activate License**
-6. Done. Your license is cached for offline use within a 5-day grace period.
+6. Done. Your license is cached for offline use within a 2-day grace period.
 
 ---
 
