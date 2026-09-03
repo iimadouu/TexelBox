@@ -2,9 +2,9 @@
 
 # TexelBox
 
-**One app. The entire texture pipeline for game developers.**
+**One app. Eight tools. The entire texture pipeline for game developers.**
 
-Stop jumping between services, standalone normal-map generators, and texture atlas packers. TexelBox handles everything from raw source image to game-ready export — in one fast, native Windows app.
+Stop jumping between GIMP, standalone normal-map generators, and texture atlas packers. TexelBox handles everything from raw source image to game-ready export — in one fast, native Windows app.
 
 [Download](https://github.com/iimadouu/TexelBox/releases) · [Features & Pricing](https://texelbox-license.imadedar98.workers.dev/pricing) · [Support](mailto:imadedar98@gmail.com)
 
@@ -41,43 +41,42 @@ The whole pipeline flows together automatically. Maps output feeds straight into
 
 ---
 
-## Free vs Pro vs Trial
+## Free vs Pro
 
 ### Free — $0 forever
-- Normal, height, roughness, AO maps
-- Tileable prep with offset, mirror, and brush
-- Basic atlas packing (up to 16 images, 2048×2048)
-- PNG/TGA export
+- Normal, height, roughness, and AO maps — all four, full slider control
+- Tileable prep: offset, mirror, brush, and auto-heal
+- Channel packing with all 4 channels including alpha
+- Basic atlas packing (up to 32 images, 2048×2048)
+- PNG + TGA export
 - Plane preview with basic validation
-- Single batch operations (up to 10 files)
-- 3 presets per functionality
+- Single batch operations (up to 25 files)
+- 5 presets per functionality
+- Quick Export in every panel
+- Source image remembered between sessions
 
 ### Pro — $49.99 one-time
 - Everything in Free, plus:
-- Full slider control for all map types
-- Auto-heal and live 3×3 preview for tileable prep
-- Unlimited atlas size (8192×8192), rotation, trim-sheet
+- Atlas above 2048×2048 (up to 8192×8192), rotation, and trim-sheet
 - DDS with BC1/BC3/BC5/BC7 compression
-- Engine presets for channel packing
-- Multi-operation batch chains with dry-run
+- Engine export profiles: Unreal 5 (ORM), Unity HDRP (Mask), Godot 4 (PBR)
+- Channel packing engine presets (Unreal ORM, Unity, Godot)
+- Multi-operation batch chains with dry-run and unlimited files
 - Unlimited presets + export/import
 - Sphere preview and full validation suite
-
-### Trial — $0 
-- Everything in Pro for 24 hours
-- No credit card required
-- After trial expires, user switched automatically to Free
-
+- Live 3×3 tileable repeat preview
 
 **One-time purchase.** No subscription. Lifetime license includes all future updates.
 
 [See the full feature comparison →](https://texelbox-license.imadedar98.workers.dev/pricing)
 
+**Free trial:** Test drive Pro for 24 hours — no credit card needed.
+
 ---
 
 ## Download
 
-1. Grab the latest `texelbox-setup.exe` from [Releases](https://github.com/iimadouu/TexelBox/releases)
+1. Grab the latest `texelbox-setup.exe` from [Releases](https://github.com/iimadouu/texelbox/releases)
 2. Run the installer (Inno Setup — opt-in desktop icon, x64 only)
 3. Launch — opens maximized and adapts to any screen
 
@@ -116,7 +115,7 @@ The whole pipeline flows together automatically. Maps output feeds straight into
 
 TexelBox is proprietary software. Free tier is permanently free for personal and commercial use. Pro requires a purchased license key.
 
-See [LICENSE](https://github.com/iimadouu/TexelBox/blob/main/LICENSE.md) for full terms.
+See [LICENSE](./LICENSE) for full terms.
 
 ---
 
