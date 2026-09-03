@@ -116,7 +116,7 @@ The whole pipeline flows together automatically. Maps output feeds straight into
 
 TexelBox is proprietary software. Free tier is permanently free for personal and commercial use. Pro requires a purchased license key.
 
-See [LICENSE](https://github.com/iimadouu/TexelBox/blob/main/LICENSE) for full terms.
+See [LICENSE](https://github.com/iimadouu/TexelBox/blob/main/LICENSE.md) for full terms.
 
 ---
 
