@@ -1,6 +1,3 @@
-# ── Everything except the Rust crates source ─────────────────────────────────
-# Only crates/ is published to GitHub.
-
 # Rust build output
 /target/
 /dist/
@@ -41,13 +38,8 @@ changelog.md
 dcc.md
 com.py
 
-
-# Cargo.lock is committed for binary crates (reproducible builds)
 # Cargo.lock
 
 # wrangler
 wrangler.toml
 wrangler.toml.example
-
-#docs
-/docs
