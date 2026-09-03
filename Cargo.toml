@@ -1,0 +1,86 @@
+﻿# TEXELBOX â€” Rust workspace root
+# Layout:
+#   crates/tbx-entitlements  -> Plan / Capability / EntitlementGate (spec Â§3, Â§4)
+#   crates/tbx-locale        -> Fluent-based localization, embedded .ftl (spec Â§8)
+#   crates/tbx-core          -> pure image-processing algorithms (spec Â§6)
+#   crates/tbx-state         -> shared project-state object + event bus (spec Â§7)
+#   crates/tbx-app           -> Slint native UI binary (spec Â§2)
+#   worker/                  -> Cloudflare Worker license backend + Supabase
+#                               (TypeScript â€” Phase 10 v2; supersedes the
+#                               original Axum+Postgres plan)
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/tbx-entitlements",
+    "crates/tbx-locale",
+    "crates/tbx-core",
+    "crates/tbx-state",
+    "crates/tbx-app",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+license = "LicenseRef-Proprietary"
+publish = false
+
+[workspace.dependencies]
+# Native, non-webview GUI toolkit (spec Â§2).
+# NOTE: Slint is GPLv3/commercial dual-licensed. Before shipping the commercial
+# build of TexelBox, either acquire a Slint commercial license or switch the UI
+# to an MIT toolkit (e.g. iced). Tracked in progress.md.
+# raw-window-handle-06: expose the native window handle so main.rs can strip
+# the minimize/maximize title-bar buttons (fixed maximized kiosk layout).
+slint = { version = "1", features = ["raw-window-handle-06"] }
+slint-build = "1"
+
+# Core image processing (spec Â§2)
+image = { version = "0.25", default-features = false, features = ["png", "tga", "jpeg", "bmp", "rayon"] }
+rayon = "1"
+# DDS/BC texture compression (spec Â§6.5): BC1/BC3/BC5/BC7 encode + DDS
+# container writing + mip generation. Pure-Rust (MIT) â€” chosen over texpresso
+# (BC1â€“BC5 only) and intel_tex_2 (needs an ISPC/C toolchain) because it also
+# covers BC7 and ships the DDS writer, keeping the release binary self-contained.
+rusty_dds = "0.9"
+
+
+# fullscreen package
+winit = "0.29"
+
+# Serialization (tokens, presets, sidecar maps)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Entitlement token crypto: Ed25519 signatures (spec Â§4.1-4.2)
+ed25519-dalek = "2"
+base64 = "0.22"
+
+# Localization (spec Â§8)
+fluent-bundle = "0.15"
+unic-langid = "0.9"
+
+# Misc
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+directories = "6"
+rfd = "0.15"
+# 3D Quick Preview viewport (spec Â§2, Â§6.6): offscreen render â†’ readback into
+# a Slint image. Native defaults (DX12/Vulkan/Metal backends) are enough.
+wgpu = "22"
+bytemuck = { version = "1", features = ["derive"] }
+# Block-on executor for the one-time async wgpu adapter/device request.
+pollster = "0.3"
+
+# Release build hardening (spec Â§2 + Â§4): abort on panic, full LTO, single
+# codegen unit, stripped symbols â€” makes reverse engineering harder.
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+strip = "symbols"
+opt-level = 3
+
+
+

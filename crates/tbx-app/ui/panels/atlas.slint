@@ -1,0 +1,437 @@
+import { Button, ComboBox, GroupBox, ListView, ProgressIndicator, ScrollView, Switch } from "std-widgets.slint";
+import { L10n, AtlasApi } from "../globals.slint";
+import { ProBadge, ParamSlider, Divider } from "../widgets.slint";
+component ImageRow inherits Rectangle {
+    in property <string> name;
+    in property <int>    index;
+    in property <int>    priority;
+    height: 28px;
+    border-radius: 4px;
+    background: AtlasApi.selected-index == index
+        ? #bae6fd
+        : touch.has-hover ? #e2e8f0
+        : transparent;
+    animate background { duration: 80ms; }
+    touch := TouchArea {
+        width: 100%; height: 100%;
+        clicked => { AtlasApi.selected-index = index; AtlasApi.selection-changed(); }
+    }
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 6px;
+        Rectangle {
+            width: 6px; height: 6px;
+            border-radius: 3px;
+            y: (parent.height - 6px) / 2;
+            background: priority == 1 ? #22c55e
+                      : priority == 2 ? #84cc16
+                      : priority == 3 ? #f59e0b
+                      : priority == 4 ? #f97316
+                      : #ef4444;
+        }
+        Text {
+            text: name;
+            font-size: 12px;
+            color: #0f172a;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+        Text {
+            text: "P" + priority;
+            font-size: 10px;
+            color: #64748b;
+            vertical-alignment: center;
+        }
+    }
+}
+export component AtlasPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.atlas-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.atlas-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if AtlasApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 430px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.atlas-images-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Rectangle {
+                                    width: count-text.preferred-width + 12px;
+                                    height: 22px;
+                                    border-radius: 11px;
+                                    background: AtlasApi.image-count > 0 ? #0ea5e9 : #e2e8f0;
+                                    animate background { duration: 150ms; }
+                                    count-text := Text {
+                                        text: AtlasApi.image-count + " " + L10n.atlas-images-word;
+                                        font-size: 11px;
+                                        font-weight: 700;
+                                        color: AtlasApi.image-count > 0 ? #ffffff : #94a3b8;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                        animate color { duration: 150ms; }
+                                    }
+                                }
+                                Rectangle { horizontal-stretch: 1; }
+                                Button {
+                                    text: L10n.atlas-add-images;
+                                    enabled: !AtlasApi.busy;
+                                    clicked => { AtlasApi.add-images(); }
+                                }
+                            }
+                            Button {
+                                text: L10n.atlas-add-packed;
+                                enabled: !AtlasApi.busy;
+                                clicked => { AtlasApi.add-packed(); }
+                            }
+                            Button {
+                                text: L10n.atlas-remove;
+                                enabled: !AtlasApi.busy && AtlasApi.selected-index >= 0;
+                                clicked => { AtlasApi.remove-selected(); }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-unlimited; }
+                                if AtlasApi.lock-unlimited : Text {
+                                    text: L10n.atlas-cap-note;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            list-zone := Rectangle {
+                                border-width: 1px;
+                                border-color: list-zone-touch.has-hover && AtlasApi.image-count == 0
+                                    ? #38bdf8 : #e2e8f0;
+                                border-radius: 6px;
+                                background: AtlasApi.image-count == 0 && list-zone-touch.has-hover
+                                    ? #f0f9ff : #ffffff;
+                                height: 148px;
+                                animate border-color { duration: 100ms; }
+                                animate background   { duration: 100ms; }
+                                list-zone-touch := TouchArea {
+                                    width: 100%; height: 100%;
+                                    mouse-cursor: AtlasApi.image-count == 0 && !AtlasApi.busy ? pointer : default;
+                                    enabled: AtlasApi.image-count == 0 && !AtlasApi.busy;
+                                    clicked => { AtlasApi.add-images(); }
+                                }
+                                if AtlasApi.image-count == 0 : VerticalLayout {
+                                    alignment: center;
+                                    spacing: 4px;
+                                    Text {
+                                        text: "🖼";
+                                        font-size: 20px;
+                                        horizontal-alignment: center;
+                                    }
+                                    Text {
+                                        text: L10n.atlas-add-images;
+                                        font-size: 11px;
+                                        color: list-zone-touch.has-hover ? #0ea5e9 : #94a3b8;
+                                        horizontal-alignment: center;
+                                        animate color { duration: 100ms; }
+                                    }
+                                }
+                                if AtlasApi.image-count > 0 : ListView {
+                                    width: 100%; height: 100%;
+                                    for name[index] in AtlasApi.image-names : ImageRow {
+                                        name: name;
+                                        index: index;
+                                        priority: AtlasApi.image-priorities[index];
+                                    }
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Text {
+                                    text: L10n.atlas-param-priority;
+                                    font-size: 11px;
+                                    color: #475569;
+                                    vertical-alignment: center;
+                                    width: 80px;
+                                }
+                                ComboBox {
+                                    horizontal-stretch: 1;
+                                    model: [
+                                        L10n.atlas-priority-1,
+                                        L10n.atlas-priority-2,
+                                        L10n.atlas-priority-3,
+                                        L10n.atlas-priority-4,
+                                        L10n.atlas-priority-5,
+                                    ];
+                                    current-index <=> AtlasApi.priority-idx;
+                                    enabled: !AtlasApi.lock-priority-arrange && AtlasApi.selected-index >= 0;
+                                }
+                                Button {
+                                    text: L10n.atlas-set-priority;
+                                    enabled: !AtlasApi.lock-priority-arrange && AtlasApi.selected-index >= 0;
+                                    clicked => { AtlasApi.set-priority(); }
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-priority-arrange; }
+                                if AtlasApi.lock-priority-arrange : Text {
+                                    text: L10n.atlas-locked-priority;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            Button {
+                                text: L10n.atlas-priority-arrange;
+                                enabled: !AtlasApi.lock-priority-arrange && !AtlasApi.busy && AtlasApi.image-count > 0;
+                                clicked => { AtlasApi.priority-arrange(); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.atlas-params-section;
+                        VerticalLayout {
+                            spacing: 8px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-size-hi; }
+                                if AtlasApi.lock-size-hi : Text {
+                                    text: L10n.atlas-locked-size;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: L10n.atlas-param-max-size;
+                                    font-size: 11px;
+                                    color: #475569;
+                                    vertical-alignment: center;
+                                    width: 120px;
+                                }
+                                ComboBox {
+                                    horizontal-stretch: 1;
+                                    model: [
+                                        L10n.atlas-size-512,
+                                        L10n.atlas-size-1024,
+                                        L10n.atlas-size-2048,
+                                        L10n.atlas-size-4096,
+                                        L10n.atlas-size-8192,
+                                    ];
+                                    current-index <=> AtlasApi.size-index;
+                                    enabled: !AtlasApi.lock-size-hi;
+                                }
+                            }
+                            ParamSlider {
+                                label: L10n.atlas-param-padding;
+                                min: 0.0; max: 16.0;
+                                value <=> AtlasApi.padding;
+                                control-enabled: !AtlasApi.lock-pad-bleed;
+                                integer-display: true;
+                            }
+                            ParamSlider {
+                                label: L10n.atlas-param-bleed;
+                                min: 0.0; max: 8.0;
+                                value <=> AtlasApi.bleed;
+                                control-enabled: !AtlasApi.lock-pad-bleed;
+                                integer-display: true;
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-pad-bleed; }
+                                if AtlasApi.lock-pad-bleed : Text {
+                                    text: L10n.atlas-locked-pad-bleed;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-rotation; }
+                                Switch {
+                                    text: L10n.atlas-param-rotation;
+                                    checked <=> AtlasApi.allow-rotation;
+                                    enabled: !AtlasApi.lock-rotation;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-trim; }
+                                Switch {
+                                    text: L10n.atlas-param-trim;
+                                    checked <=> AtlasApi.trim-sheet;
+                                    enabled: !AtlasApi.lock-trim;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: AtlasApi.lock-sidecar-extra; }
+                                if AtlasApi.lock-sidecar-extra : Text {
+                                    text: L10n.atlas-locked-sidecar;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: L10n.atlas-param-sidecar;
+                                    font-size: 11px;
+                                    color: #475569;
+                                    vertical-alignment: center;
+                                    width: 120px;
+                                }
+                                ComboBox {
+                                    horizontal-stretch: 1;
+                                    model: [L10n.atlas-sidecar-json, L10n.atlas-sidecar-xml];
+                                    current-index <=> AtlasApi.sidecar-index;
+                                    enabled: !AtlasApi.lock-sidecar-extra;
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.common-export;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Button {
+                                text: L10n.atlas-build;
+                                primary: AtlasApi.image-count > 0 && !AtlasApi.busy;
+                                enabled: !AtlasApi.busy && AtlasApi.image-count > 0;
+                                clicked => { AtlasApi.build(); }
+                            }
+                            Divider {}
+                            Button {
+                                text: L10n.atlas-export-image;
+                                enabled: AtlasApi.has-atlas && !AtlasApi.busy;
+                                clicked => { AtlasApi.export-image(); }
+                            }
+                            Button {
+                                text: L10n.common-quick-export;
+                                enabled: AtlasApi.has-atlas && !AtlasApi.busy;
+                                clicked => { AtlasApi.quick-export-atlas(); }
+                            }
+                            Button {
+                                text: L10n.atlas-export-sidecar;
+                                enabled: AtlasApi.has-atlas && !AtlasApi.busy;
+                                clicked => { AtlasApi.export-sidecar(); }
+                            }
+                            Button {
+                                text: L10n.atlas-send-to-maps;
+                                enabled: AtlasApi.has-atlas && !AtlasApi.busy;
+                                clicked => { AtlasApi.send-to-maps(); }
+                            }
+                            if AtlasApi.status != "" : Text {
+                                text: AtlasApi.status;
+                                font-size: 11px;
+                                color: #0369a1;
+                                wrap: word-wrap;
+                            }
+                            Text {
+                                text: L10n.atlas-hint;
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.atlas-preview;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 6px;
+                    if AtlasApi.atlas-info != "" : Text {
+                        text: AtlasApi.atlas-info;
+                        font-size: 11px;
+                        color: #475569;
+                    }
+                    preview-rect := Rectangle {
+                        vertical-stretch: 1;
+                        min-height: 420px;
+                        background: #111827;
+                        border-radius: 8px;
+                        Image {
+                            source: AtlasApi.atlas-preview;
+                            x: 0; y: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                        if !AtlasApi.has-atlas && !AtlasApi.busy : VerticalLayout {
+                            alignment: center;
+                            spacing: 6px;
+                            Text {
+                                text: "🗺";
+                                font-size: 32px;
+                                horizontal-alignment: center;
+                                color: #ffffff;
+                            }
+                            Text {
+                                text: L10n.common-no-image;
+                                color: #475569;
+                                font-size: 12px;
+                                horizontal-alignment: center;
+                            }
+                        }
+                        if AtlasApi.busy : Rectangle {
+                            background: rgba(15, 23, 42, 0.6);
+                            border-radius: 8px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 8px;
+                                ProgressIndicator {
+                                    indeterminate: true;
+                                    width: 36px;
+                                    height: 36px;
+                                }
+                                Text {
+                                    text: L10n.common-busy;
+                                    color: #e2e8f0;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

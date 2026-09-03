@@ -1,0 +1,13 @@
+[package]
+name = "tbx-state"
+description = "Shared project-state object + event bus. Every module reads/writes this state so switching tabs never loses work and 'send to X' needs no re-export (spec section 7)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+image = { workspace = true }
+serde = { workspace = true }
+tbx-core = { path = "../tbx-core" }
+tbx-entitlements = { path = "../tbx-entitlements" }

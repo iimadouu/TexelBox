@@ -1,0 +1,430 @@
+import { Button, CheckBox, ComboBox, GroupBox, ProgressIndicator, ScrollView, Slider, Switch } from "std-widgets.slint";
+import { L10n, MapsApi } from "../globals.slint";
+import { ProBadge, ParamSlider, Divider } from "../widgets.slint";
+component MapPreview inherits Rectangle {
+    in property <string> caption;
+    in property <image> img;
+    in property <bool> has-img;
+    in property <bool> locked;
+    in property <string> locked-text;
+    in property <bool> generating;
+    callback save;
+    border-width: generating ? 2px : 1px;
+    border-color: generating ? #f59e0b : #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    preferred-height: 230px;
+    min-width: 180px;
+    animate border-color { duration: 200ms; }
+    animate border-width  { duration: 200ms; }
+    drop-shadow-blur: has-img ? 4px : 0px;
+    drop-shadow-color: rgba(0,0,0,0.06);
+    animate drop-shadow-blur { duration: 150ms; }
+    VerticalLayout {
+        padding: 8px;
+        spacing: 6px;
+        HorizontalLayout {
+            spacing: 6px;
+            Text {
+                text: caption;
+                font-size: 12px;
+                font-weight: 600;
+                color: #0f172a;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if locked : ProBadge { locked: true; }
+            if has-img && !locked : Rectangle {
+                width: 8px; height: 8px;
+                border-radius: 4px;
+                background: #22c55e;
+                y: (parent.height - 8px) / 2;
+            }
+        }
+        Rectangle {
+            vertical-stretch: 1;
+            background: #f1f5f9;
+            border-radius: 4px;
+            Image {
+                source: img;
+                x: 0; y: 0;
+                width: parent.width;
+                height: parent.height;
+                image-fit: contain;
+                image-rendering: pixelated;
+            }
+            if !has-img && !generating : Text {
+                text: L10n.common-no-image;
+                color: #94a3b8;
+                font-size: 11px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            if generating : Rectangle {
+                background: rgba(254, 243, 199, 0.75);
+                border-radius: 4px;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 4px;
+                    ProgressIndicator { indeterminate: true; width: 24px; height: 24px; }
+                    Text {
+                        text: L10n.common-busy;
+                        color: #92400e;
+                        font-size: 10px;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+            if locked : Rectangle {
+                background: rgba(15, 23, 42, 0.6);
+                border-radius: 4px;
+                Text {
+                    text: locked-text;
+                    color: #fde68a;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            if has-img : Text {
+                text: L10n.common-preview-note;
+                font-size: 9px;
+                color: #94a3b8;
+            }
+        }
+        Button {
+            text: L10n.common-save;
+            enabled: has-img && !locked && !generating;
+            clicked => { root.save(); }
+        }
+    }
+}
+export component MapsPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.maps-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.maps-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if MapsApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 250px;
+                GroupBox {
+                    title: L10n.maps-source-section;
+                    width: left-scroll.visible-width;
+                    VerticalLayout {
+                        spacing: 8px;
+                        src-zone := Rectangle {
+                            height: 180px;
+                            background: src-touch.has-hover && !MapsApi.busy
+                                ? #e0f2fe : #f1f5f9;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: src-touch.has-hover && !MapsApi.busy
+                                ? #38bdf8 : #e2e8f0;
+                            animate background   { duration: 100ms; }
+                            animate border-color { duration: 100ms; }
+                            Image {
+                                source: MapsApi.source-image;
+                                x: 0; y: 0;
+                                width: parent.width;
+                                height: parent.height;
+                                image-fit: contain;
+                                image-rendering: pixelated;
+                            }
+                            if !MapsApi.has-source || (src-touch.has-hover && !MapsApi.busy) : Rectangle {
+                                background: !MapsApi.has-source
+                                    ? transparent
+                                    : rgba(14, 165, 233, 0.12);
+                                border-radius: 8px;
+                                VerticalLayout {
+                                    alignment: center;
+                                    spacing: 4px;
+                                    Text {
+                                        text: "📂";
+                                        font-size: 22px;
+                                        horizontal-alignment: center;
+                                    }
+                                    Text {
+                                        text: L10n.common-open-image;
+                                        color: MapsApi.has-source ? #0ea5e9 : #94a3b8;
+                                        font-size: 11px;
+                                        horizontal-alignment: center;
+                                    }
+                                }
+                            }
+                            src-touch := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                enabled: !MapsApi.busy;
+                                mouse-cursor: pointer;
+                                clicked => { MapsApi.open-source(); }
+                            }
+                        }
+                        if MapsApi.has-source : Text {
+                            text: L10n.common-preview-note;
+                            font-size: 10px;
+                            color: #94a3b8;
+                        }
+                        Text {
+                            text: MapsApi.source-name;
+                            font-size: 11px;
+                            color: #334155;
+                            wrap: char-wrap;
+                        }
+                        if MapsApi.has-source : Text {
+                            text: MapsApi.resolution-label;
+                            font-size: 11px;
+                            color: #64748b;
+                        }
+                        Divider {}
+                        Button {
+                            text: MapsApi.busy ? L10n.common-busy : L10n.maps-generate;
+                            primary: MapsApi.has-source && !MapsApi.busy;
+                            enabled: MapsApi.has-source && !MapsApi.busy;
+                            clicked => { MapsApi.generate(); }
+                        }
+                        Button {
+                            text: L10n.common-quick-export;
+                            enabled: (MapsApi.has-normal || MapsApi.has-height
+                                || MapsApi.has-roughness || MapsApi.has-ao) && !MapsApi.busy;
+                            clicked => { MapsApi.quick-export(); }
+                        }
+                        Button {
+                            text: L10n.maps-send-to-packer;
+                            enabled: (MapsApi.has-height || MapsApi.has-normal
+                                || MapsApi.has-roughness || MapsApi.has-ao) && !MapsApi.busy;
+                            clicked => { MapsApi.send-to-packer(); }
+                        }
+                        if MapsApi.status != "" : Text {
+                            text: MapsApi.status;
+                            font-size: 11px;
+                            color: #0369a1;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+            }
+            params-scroll := ScrollView {
+                width: 330px;
+                HorizontalLayout {
+                    width: params-scroll.visible-width;
+                    VerticalLayout {
+                        spacing: 10px;
+                        GroupBox {
+                            title: L10n.maps-map-height;
+                            VerticalLayout {
+                                spacing: 6px;
+                                CheckBox {
+                                    text: L10n.common-enabled;
+                                    checked <=> MapsApi.enable-height;
+                                }
+                                Text { text: L10n.maps-param-height-channel; font-size: 11px; color: #475569; }
+                                ComboBox {
+                                    model: [
+                                        L10n.maps-height-channel-lum,
+                                        L10n.maps-height-channel-r,
+                                        L10n.maps-height-channel-g,
+                                        L10n.maps-height-channel-b,
+                                        L10n.maps-height-channel-a,
+                                    ];
+                                    current-index <=> MapsApi.height-source-channel;
+                                    enabled: MapsApi.enable-height;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-contrast;
+                                    min: 0.25; max: 3.0;
+                                    value <=> MapsApi.contrast;
+                                    control-enabled: MapsApi.enable-height;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-brightness;
+                                    min: -0.5; max: 0.5;
+                                    value <=> MapsApi.brightness;
+                                    control-enabled: MapsApi.enable-height;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-blur-radius;
+                                    min: 0.0; max: 32.0;
+                                    value <=> MapsApi.blur-radius;
+                                    control-enabled: MapsApi.enable-height;
+                                    integer-display: true;
+                                }
+                                Switch {
+                                    text: L10n.maps-param-invert;
+                                    checked <=> MapsApi.invert-height;
+                                    enabled: MapsApi.enable-height;
+                                }
+                            }
+                        }
+                        GroupBox {
+                            title: L10n.maps-map-normal;
+                            VerticalLayout {
+                                spacing: 6px;
+                                CheckBox {
+                                    text: L10n.common-enabled;
+                                    checked <=> MapsApi.enable-normal;
+                                }
+                                Switch {
+                                    text: L10n.maps-param-normal-auto-strength;
+                                    checked <=> MapsApi.normal-auto-strength;
+                                    enabled: MapsApi.enable-normal;
+                                }
+                                Switch {
+                                    text: L10n.maps-param-detail-enhance;
+                                    checked <=> MapsApi.detail-enhance;
+                                    enabled: MapsApi.enable-normal;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-strength;
+                                    min: 0.0; max: 10.0;
+                                    value <=> MapsApi.normal-strength;
+                                    control-enabled: MapsApi.enable-normal && !MapsApi.normal-auto-strength;
+                                }
+                                Text { text: L10n.maps-param-kernel; font-size: 11px; color: #475569; }
+                                ComboBox {
+                                    model: [L10n.maps-kernel-3, L10n.maps-kernel-5];
+                                    current-index <=> MapsApi.normal-kernel;
+                                    enabled: MapsApi.enable-normal;
+                                }
+                                Switch {
+                                    text: L10n.maps-param-wrap-edges;
+                                    checked <=> MapsApi.wrap-edges;
+                                    enabled: MapsApi.enable-normal;
+                                }
+                            }
+                        }
+                        GroupBox {
+                            title: L10n.maps-map-roughness;
+                            VerticalLayout {
+                                spacing: 6px;
+                                CheckBox {
+                                    text: L10n.common-enabled;
+                                    checked <=> MapsApi.enable-roughness;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-rough-radius;
+                                    min: 1.0; max: 32.0;
+                                    value <=> MapsApi.rough-radius;
+                                    control-enabled: MapsApi.enable-roughness;
+                                    integer-display: true;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-rough-amount;
+                                    min: 0.0; max: 4.0;
+                                    value <=> MapsApi.rough-amount;
+                                    control-enabled: MapsApi.enable-roughness;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-rough-curve;
+                                    min: 0.25; max: 4.0;
+                                    value <=> MapsApi.rough-curve;
+                                    control-enabled: MapsApi.enable-roughness;
+                                }
+                                Switch {
+                                    text: L10n.maps-param-invert;
+                                    checked <=> MapsApi.rough-invert;
+                                    enabled: MapsApi.enable-roughness;
+                                }
+                            }
+                        }
+                        GroupBox {
+                            title: L10n.maps-map-ao;
+                            VerticalLayout {
+                                spacing: 6px;
+                                CheckBox {
+                                    text: L10n.common-enabled;
+                                    checked <=> MapsApi.enable-ao;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-ao-radius;
+                                    min: 1.0; max: 64.0;
+                                    value <=> MapsApi.ao-radius;
+                                    control-enabled: MapsApi.enable-ao;
+                                    integer-display: true;
+                                }
+                                ParamSlider {
+                                    label: L10n.maps-param-ao-intensity;
+                                    min: 0.0; max: 2.0;
+                                    value <=> MapsApi.ao-intensity;
+                                    control-enabled: MapsApi.enable-ao;
+                                }
+                                Text {
+                                    text: L10n.maps-ao-approximation-note;
+                                    font-size: 10px;
+                                    color: #64748b;
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            out-scroll := ScrollView {
+                horizontal-stretch: 1;
+                GridLayout {
+                    padding: 0px;
+                    spacing: 10px;
+                    width: out-scroll.visible-width;
+                    Row {
+                        MapPreview {
+                            caption: L10n.maps-map-normal;
+                            img: MapsApi.out-normal;
+                            has-img: MapsApi.has-normal;
+                            locked: false;
+                            generating: MapsApi.busy && MapsApi.enable-normal;
+                            save => { MapsApi.save-map(0); }
+                        }
+                        MapPreview {
+                            caption: L10n.maps-map-height;
+                            img: MapsApi.out-height;
+                            has-img: MapsApi.has-height;
+                            locked: false;
+                            generating: MapsApi.busy && MapsApi.enable-height;
+                            save => { MapsApi.save-map(1); }
+                        }
+                    }
+                    Row {
+                        MapPreview {
+                            caption: L10n.maps-map-roughness;
+                            img: MapsApi.out-roughness;
+                            has-img: MapsApi.has-roughness;
+                            locked: false;
+                            generating: MapsApi.busy && MapsApi.enable-roughness;
+                            save => { MapsApi.save-map(2); }
+                        }
+                        MapPreview {
+                            caption: L10n.maps-map-ao;
+                            img: MapsApi.out-ao;
+                            has-img: MapsApi.has-ao;
+                            locked: false;
+                            generating: MapsApi.busy && MapsApi.enable-ao;
+                            save => { MapsApi.save-map(3); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

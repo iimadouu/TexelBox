@@ -1,0 +1,266 @@
+import { Button, ComboBox, GroupBox, ScrollView } from "std-widgets.slint";
+import { L10n, PackingApi } from "../globals.slint";
+import { ProBadge, Divider } from "../widgets.slint";
+component ChannelRow inherits Rectangle {
+    in property <string> label;
+    in property <int>    channel-index;
+    in-out property <int> source-index;
+    in property <bool>   row-enabled: true;
+    in property <int>    channel: 0;
+    height: row.preferred-height + 8px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border-width: 1px;
+    border-color: #e2e8f0;
+    Rectangle {
+        x: 0; y: 0;
+        width: 4px;
+        height: parent.height;
+        border-radius: 3px;
+        background: channel == 0 ? #ef4444
+                  : channel == 1 ? #22c55e
+                  : channel == 2 ? #3b82f6
+                  : #a855f7;
+    }
+    row := HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 8px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        spacing: 8px;
+        Text {
+            text: label;
+            font-size: 12px;
+            font-weight: 700;
+            color: channel == 0 ? #dc2626
+                 : channel == 1 ? #16a34a
+                 : channel == 2 ? #2563eb
+                 : #9333ea;
+            vertical-alignment: center;
+            width: 24px;
+        }
+        ComboBox {
+            horizontal-stretch: 1;
+            model: [
+                L10n.pack-src-empty,
+                L10n.pack-src-const-0,
+                L10n.pack-src-const-255,
+                L10n.pack-src-maps-roughness,
+                L10n.pack-src-maps-ao,
+                L10n.pack-src-maps-height,
+                L10n.pack-src-maps-normal,
+                L10n.pack-src-custom,
+            ];
+            current-index <=> source-index;
+            enabled: row-enabled;
+            selected => { PackingApi.update-preview(); }
+        }
+        Button {
+            text: L10n.pack-load-custom;
+            enabled: row-enabled;
+            clicked => { PackingApi.load-slot(channel-index); }
+        }
+    }
+}
+export component PackingPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.packing-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.packing-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 430px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.packing-title;
+                        VerticalLayout {
+                            spacing: 6px;
+                            ChannelRow {
+                                label: "R";
+                                channel: 0;
+                                channel-index: 0;
+                                source-index <=> PackingApi.source-r;
+                            }
+                            ChannelRow {
+                                label: "G";
+                                channel: 1;
+                                channel-index: 1;
+                                source-index <=> PackingApi.source-g;
+                            }
+                            ChannelRow {
+                                label: "B";
+                                channel: 2;
+                                channel-index: 2;
+                                source-index <=> PackingApi.source-b;
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                if PackingApi.lock-alpha : Text {
+                                    text: L10n.pack-locked-alpha;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            ChannelRow {
+                                label: "A";
+                                channel: 3;
+                                channel-index: 3;
+                                source-index <=> PackingApi.source-a;
+                                row-enabled: !PackingApi.lock-alpha;
+                            }
+                            Text {
+                                text: L10n.pack-hint;
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.pack-preset;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                if PackingApi.lock-presets : Text {
+                                    text: L10n.pack-locked-presets;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            ComboBox {
+                                model: [
+                                    L10n.pack-preset-custom,
+                                    L10n.pack-preset-unreal,
+                                    L10n.pack-preset-unity,
+                                    L10n.pack-preset-godot,
+                                ];
+                                current-index <=> PackingApi.preset-index;
+                                enabled: !PackingApi.lock-presets;
+                            }
+                            Button {
+                                text: L10n.pack-preset;
+                                enabled: !PackingApi.lock-presets;
+                                clicked => { PackingApi.apply-preset(PackingApi.preset-index); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.common-export;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Button {
+                                text: L10n.pack-export;
+                                primary: PackingApi.has-preview;
+                                enabled: PackingApi.has-preview && !PackingApi.busy;
+                                clicked => { PackingApi.export-pack(); }
+                            }
+                            Button {
+                                text: L10n.common-quick-export;
+                                enabled: PackingApi.has-preview && !PackingApi.busy;
+                                clicked => { PackingApi.quick-export-pack(); }
+                            }
+                            if PackingApi.status != "" : Text {
+                                text: PackingApi.status;
+                                font-size: 11px;
+                                color: #0369a1;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.pack-preview;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 8px;
+                    preview-rect := Rectangle {
+                        vertical-stretch: 1;
+                        min-height: 320px;
+                        background: #111827;
+                        border-radius: 8px;
+                        Image {
+                            source: PackingApi.preview;
+                            x: 0; y: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                        if !PackingApi.has-preview && !PackingApi.busy : Rectangle {
+                            background: transparent;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 6px;
+                                HorizontalLayout {
+                                    alignment: center;
+                                    spacing: 6px;
+                                    for col in [#ef4444, #22c55e, #3b82f6, #a855f7] : Rectangle {
+                                        width: 14px; height: 14px;
+                                        border-radius: 7px;
+                                        background: col;
+                                        opacity: 0.5;
+                                    }
+                                }
+                                Text {
+                                    text: L10n.common-no-image;
+                                    color: #94a3b8;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                        if PackingApi.busy : Rectangle {
+                            background: rgba(15, 23, 42, 0.55);
+                            border-radius: 8px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 6px;
+                                Text {
+                                    text: "⏳";
+                                    font-size: 24px;
+                                    horizontal-alignment: center;
+                                }
+                                Text {
+                                    text: L10n.common-busy;
+                                    color: #e2e8f0;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                        if PackingApi.has-preview : Text {
+                            text: L10n.common-preview-note;
+                            font-size: 10px;
+                            color: #94a3b8;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

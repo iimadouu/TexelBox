@@ -1,0 +1,12 @@
+# Workspace-level Cargo configuration.
+
+[target.x86_64-pc-windows-msvc]
+# Increase the main thread stack size from the Windows default (1 MB) to 8 MB.
+# Required because all 9 Slint panels are permanently instantiated (visible
+# toggling for instant tab switching) and Slint's layout engine recurses deeply
+# through the widget tree during the initial layout pass.  With 9 large panels
+# alive simultaneously this exhausts the 1 MB default, causing STATUS_STACK_OVERFLOW.
+rustflags = ["-C", "link-args=/STACK:8388608"]
+
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "link-args=-Wl,--stack,8388608"]

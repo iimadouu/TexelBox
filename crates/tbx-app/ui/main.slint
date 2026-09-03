@@ -1,0 +1,295 @@
+import { L10n, Nav, Session } from "globals.slint";
+import { Palette, Button } from "std-widgets.slint";
+import { MapsPanel } from "panels/maps.slint";
+import { TileablePanel } from "panels/tileable.slint";
+import { PackingPanel } from "panels/packing.slint";
+import { AtlasPanel } from "panels/atlas.slint";
+import { OptimizePanel } from "panels/optimize.slint";
+import { PreviewPanel } from "panels/preview.slint";
+import { BatchPanel } from "panels/batch.slint";
+import { PresetsPanel } from "panels/presets.slint";
+import { StubPanel } from "panels/stub.slint";
+import { SettingsPanel } from "panels/settings.slint";
+import { EngineProfilesPanel } from "panels/engine_profiles.slint";
+export { L10n, Session, Nav, MapsApi, SettingsApi, TileableApi, PackingApi, AtlasApi, OptimizeApi, PreviewApi, BatchApi, PresetsApi, EngineProfilesApi } from "globals.slint";
+component NavButton inherits Rectangle {
+    in property <string> label;
+    in property <string> shortcut;
+    in property <int> index;
+    property <bool> active: Nav.tab == index;
+    height: 38px;
+    border-radius: 6px;
+    background: active
+        ? #334155
+        : touch.pressed ? #1e293b
+        : touch.has-hover ? #16202f
+        : transparent;
+    animate background { duration: 100ms; }
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        clicked => { Nav.tab = index; Nav.tab-selected(index); }
+    }
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 10px;
+        spacing: 0;
+        Text {
+            text: label;
+            color: active ? #7dd3fc : touch.has-hover ? #e2e8f0 : #cbd5e1;
+            font-size: 13px;
+            font-weight: active ? 600 : 400;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            animate color { duration: 100ms; }
+        }
+        if touch.has-hover || active : Text {
+            text: shortcut;
+            color: active ? #475569 : #374151;
+            font-size: 10px;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+        }
+    }
+    if active : Rectangle {
+        x: 0px;
+        y: 6px;
+        width: 3px;
+        height: parent.height - 12px;
+        border-radius: 2px;
+        background: #38bdf8;
+    }
+}
+export component MainWindow inherits Window {
+    title: L10n.app-title;
+    background: #f1f5f9;
+    init => {
+        Palette.color-scheme = ColorScheme.light;
+    }
+    if Session.trial-expired && !Session.trial-expired-shown : Rectangle {
+        x: 0; y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: rgba(0, 0, 0, 0.55);
+        z: 999;
+        VerticalLayout {
+            alignment: center;
+            spacing: 12px;
+            padding: 24px;
+            Rectangle {
+                background: #ffffff;
+                border-radius: 12px;
+                drop-shadow-blur: 24px;
+                drop-shadow-color: rgba(0,0,0,0.18);
+                max-width: 420px;
+                VerticalLayout {
+                    spacing: 14px;
+                    padding: 24px;
+                    Text {
+                        text: L10n.trial-expired-title;
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #0f172a;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: L10n.trial-expired-message;
+                        font-size: 13px;
+                        color: #475569;
+                        wrap: word-wrap;
+                        horizontal-alignment: center;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: center;
+                        Button {
+                            text: L10n.trial-expired-upgrade-pro;
+                            primary: true;
+                            clicked => { Session.open-url("/pricing"); }
+                        }
+                        Button {
+                            text: L10n.trial-expired-switch-free;
+                            clicked => { Session.switch-to-free-plan(); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if Session.trial-warning && !Session.trial-expired : Rectangle {
+        x: 0; y: 0;
+        width: parent.width;
+        height: 36px;
+        background: #fef3c7;
+        border-color: #fbbf24;
+        border-width: 0px;
+        z: 500;
+        HorizontalLayout {
+            alignment: center;
+            padding-left: 16px;
+            padding-right: 16px;
+            spacing: 8px;
+            Text {
+                text: "⚠";
+                color: #92400e;
+                font-size: 13px;
+                vertical-alignment: center;
+            }
+            Text {
+                text: L10n.trial-warning-message;
+                color: #92400e;
+                font-size: 12px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+        }
+    }
+    HorizontalLayout {
+        min-width: 1180px;
+        min-height: 720px;
+        preferred-width: 1280px;
+        preferred-height: 800px;
+        Rectangle {
+            width: 232px;
+            background: #0f172a;
+            VerticalLayout {
+                padding-top: 16px;
+                padding-bottom: 12px;
+                padding-left: 12px;
+                padding-right: 12px;
+                spacing: 2px;
+                HorizontalLayout {
+                    spacing: 8px;
+                    padding-bottom: 4px;
+                    Rectangle {
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 6px;
+                        background: @linear-gradient(135deg, #38bdf8, #818cf8);
+                    }
+                    VerticalLayout {
+                        alignment: center;
+                        Text {
+                            text: L10n.app-title;
+                            color: #f8fafc;
+                            font-size: 15px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: L10n.app-tagline;
+                            color: #64748b;
+                            font-size: 10px;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+                Rectangle { height: 12px; }
+                NavButton { label: L10n.nav-maps;     shortcut: "1"; index: 0; }
+                NavButton { label: L10n.nav-tileable; shortcut: "2"; index: 1; }
+                NavButton { label: L10n.nav-packing;  shortcut: "3"; index: 2; }
+                NavButton { label: L10n.nav-atlas;    shortcut: "4"; index: 3; }
+                NavButton { label: L10n.nav-optimize; shortcut: "5"; index: 4; }
+                NavButton { label: L10n.nav-preview;  shortcut: "6"; index: 5; }
+                NavButton { label: L10n.nav-batch;    shortcut: "7"; index: 6; }
+                NavButton { label: L10n.nav-presets;  shortcut: "8"; index: 7; }
+                NavButton { label: L10n.engine-title; shortcut: "0"; index: 9; }
+                Rectangle { height: 8px; }
+                Rectangle { height: 1px; background: #1e293b; }
+                Rectangle { height: 8px; }
+                NavButton { label: L10n.nav-settings; shortcut: "9"; index: 8; }
+                Rectangle { vertical-stretch: 1; }
+                if Session.update-available : Rectangle {
+                    height: 28px;
+                    border-radius: 6px;
+                    background: #1e3a5f;
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 6px;
+                        Text {
+                            text: "↑";
+                            color: #38bdf8;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Session.update-note;
+                            color: #93c5fd;
+                            font-size: 10px;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+                Rectangle { height: 6px; }
+                Rectangle {
+                    height: plan-col.preferred-height + 18px;
+                    border-radius: 8px;
+                    border-width: 1px;
+                    border-color: Session.is-trial ? #78350f
+                                : Session.is-pro   ? #14532d
+                                : #334155;
+                    background: Session.is-trial ? #451a03
+                              : Session.is-pro   ? #052e16
+                              : #1e293b;
+                    plan-col := VerticalLayout {
+                        padding: 9px;
+                        spacing: 3px;
+                        HorizontalLayout {
+                            spacing: 6px;
+                            Rectangle {
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 4px;
+                                y: (parent.height - 8px) / 2;
+                                background: Session.is-trial ? #fbbf24
+                                          : Session.is-pro   ? #4ade80
+                                          : #64748b;
+                            }
+                            Text {
+                                text: Session.plan-label;
+                                color: Session.is-trial ? #fbbf24
+                                     : Session.is-pro   ? #86efac
+                                     : #e2e8f0;
+                                font-size: 12px;
+                                font-weight: 600;
+                            }
+                        }
+                        if Session.is-trial : Text {
+                            text: Session.trial-expires;
+                            color: #f59e0b;
+                            font-size: 10px;
+                        }
+                        if !Session.is-pro : Text {
+                            text: L10n.license-upgrade;
+                            color: #38bdf8;
+                            font-size: 11px;
+                        }
+                    }
+                }
+            }
+        }
+        Rectangle {
+            horizontal-stretch: 1;
+            background: #f8fafc;
+            FocusScope {
+                x: 0; y: 0; width: 0; height: 0;
+                key-pressed(event) => {
+                    Nav.key-switch(event.text);
+                    reject
+                }
+            }
+            MapsPanel     { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 0; }
+            TileablePanel { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 1; }
+            PackingPanel  { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 2; }
+            AtlasPanel    { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 3; }
+            OptimizePanel { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 4; }
+            PreviewPanel  { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 5; }
+            BatchPanel    { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 6; }
+            PresetsPanel  { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 7; }
+            SettingsPanel { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 8; }
+            EngineProfilesPanel { x: 0; y: 0; width: parent.width; height: parent.height; visible: Nav.tab == 9; }
+        }
+    }
+}

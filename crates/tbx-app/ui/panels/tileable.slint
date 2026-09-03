@@ -1,0 +1,350 @@
+import { Button, GroupBox, ProgressIndicator, ScrollView, Switch } from "std-widgets.slint";
+import { L10n, TileableApi } from "../globals.slint";
+import { ProBadge, ParamSlider, Divider } from "../widgets.slint";
+export component TileablePanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.tileable-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.tileable-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if TileableApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 268px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: "1 · " + L10n.tileable-result;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: TileableApi.source-name;
+                                font-size: 11px;
+                                color: #334155;
+                                wrap: char-wrap;
+                            }
+                            Button {
+                                text: L10n.common-open-image;
+                                enabled: !TileableApi.busy;
+                                clicked => { TileableApi.open-source(); }
+                            }
+                            Button {
+                                text: L10n.tileable-apply-offset;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.apply-offset(); }
+                            }
+                            Button {
+                                text: L10n.tileable-reset;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.reset(); }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Button {
+                                    text: L10n.common-undo;
+                                    enabled: TileableApi.can-undo && !TileableApi.busy;
+                                    horizontal-stretch: 1;
+                                    clicked => { TileableApi.undo(); }
+                                }
+                                Button {
+                                    text: L10n.common-redo;
+                                    enabled: TileableApi.can-redo && !TileableApi.busy;
+                                    horizontal-stretch: 1;
+                                    clicked => { TileableApi.redo(); }
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: "2a · " + L10n.tileable-auto-heal;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                if TileableApi.lock-auto-heal : Text {
+                                    text: L10n.tileable-locked-heal;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-heal-strength;
+                                min: 0.0; max: 1.0;
+                                value <=> TileableApi.heal-strength;
+                                control-enabled: !TileableApi.lock-auto-heal && TileableApi.has-work;
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-heal-radius;
+                                min: 4.0; max: 128.0;
+                                value <=> TileableApi.heal-radius;
+                                control-enabled: !TileableApi.lock-auto-heal && TileableApi.has-work;
+                                integer-display: true;
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-heal-passes;
+                                min: 1.0; max: 3.0;
+                                value <=> TileableApi.heal-passes;
+                                control-enabled: !TileableApi.lock-auto-heal && TileableApi.has-work;
+                                integer-display: true;
+                            }
+                            Button {
+                                text: L10n.tileable-auto-heal;
+                                primary: true;
+                                enabled: TileableApi.has-work && !TileableApi.busy && !TileableApi.lock-auto-heal;
+                                clicked => { TileableApi.auto-heal(); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: "2b · " + L10n.tileable-mirror;
+                        VerticalLayout {
+                            spacing: 6px;
+                            Button {
+                                text: L10n.tileable-mirror;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.mirror(); }
+                            }
+                            Divider {}
+                            Switch {
+                                text: L10n.tileable-brush-enabled;
+                                checked <=> TileableApi.brush-enabled;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-brush-size;
+                                min: 4.0; max: 96.0;
+                                value <=> TileableApi.brush-size;
+                                control-enabled: TileableApi.brush-enabled && !TileableApi.busy;
+                                integer-display: true;
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-brush-offset-x;
+                                min: -64.0; max: 64.0;
+                                value <=> TileableApi.brush-offset-x;
+                                control-enabled: TileableApi.brush-enabled && !TileableApi.busy;
+                                integer-display: true;
+                            }
+                            ParamSlider {
+                                label: L10n.tileable-param-brush-offset-y;
+                                min: -64.0; max: 64.0;
+                                value <=> TileableApi.brush-offset-y;
+                                control-enabled: TileableApi.brush-enabled && !TileableApi.busy;
+                                integer-display: true;
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: "3 · " + L10n.common-export;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Button {
+                                text: L10n.tileable-send-to-maps;
+                                primary: true;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.send-to-maps(); }
+                            }
+                            Button {
+                                text: L10n.common-save;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.save(); }
+                            }
+                            Button {
+                                text: L10n.common-quick-export;
+                                enabled: TileableApi.has-work && !TileableApi.busy;
+                                clicked => { TileableApi.quick-export(); }
+                            }
+                        }
+                    }
+                    if TileableApi.status != "" : Text {
+                        text: TileableApi.status;
+                        font-size: 11px;
+                        color: #0369a1;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.tileable-result;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 8px;
+                    canvas := Rectangle {
+                        vertical-stretch: 1;
+                        border-radius: 8px;
+                        border-width: TileableApi.brush-enabled && !TileableApi.busy ? 2px : 1px;
+                        border-color: TileableApi.brush-enabled && !TileableApi.busy
+                            ? #38bdf8
+                            : TileableApi.busy ? #f59e0b
+                            : #1e293b;
+                        background: #111827;
+                        animate border-color { duration: 150ms; }
+                        animate border-width  { duration: 150ms; }
+                        property <length> img-w: TileableApi.work-image.width * 1px;
+                        property <length> img-h: TileableApi.work-image.height * 1px;
+                        property <float>  img-ar: img-h > 0px ? img-w / img-h : 1.0;
+                        property <float>  canvas-ar: canvas.height > 0px ? canvas.width / canvas.height : 1.0;
+                        property <bool>   fits-wide: img-ar >= canvas-ar;
+                        property <length> fit-w: img-h > 0px ? (fits-wide ? canvas.width : canvas.height * img-ar) : 0px;
+                        property <length> fit-h: img-h > 0px ? (fits-wide ? canvas.width / img-ar : canvas.height) : 0px;
+                        property <length> fit-x: (canvas.width  - fit-w) / 2;
+                        property <length> fit-y: (canvas.height - fit-h) / 2;
+                        Image {
+                            source: TileableApi.work-image;
+                            x: 0; y: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                        if !TileableApi.has-work : Rectangle {
+                            background: transparent;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 6px;
+                                Text {
+                                    text: "📂";
+                                    font-size: 28px;
+                                    horizontal-alignment: center;
+                                    color: #ffffff;
+                                }
+                                Text {
+                                    text: L10n.common-open-image;
+                                    color: #94a3b8;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                            TouchArea {
+                                width: 100%; height: 100%;
+                                mouse-cursor: pointer;
+                                clicked => { TileableApi.open-source(); }
+                            }
+                        }
+                        if TileableApi.has-work : Text {
+                            text: L10n.common-preview-note;
+                            font-size: 10px;
+                            color: #64748b;
+                        }
+                        if TileableApi.brush-enabled && !TileableApi.busy : Rectangle {
+                            x: parent.width - 80px;
+                            y: 8px;
+                            width: 72px;
+                            height: 20px;
+                            border-radius: 10px;
+                            background: rgba(56, 189, 248, 0.85);
+                            Text {
+                                text: "✏ Brush";
+                                font-size: 10px;
+                                font-weight: 700;
+                                color: #0f172a;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                        if TileableApi.busy : Rectangle {
+                            background: rgba(15, 23, 42, 0.55);
+                            border-radius: 8px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 6px;
+                                ProgressIndicator { indeterminate: true; width: 32px; height: 32px; }
+                                Text {
+                                    text: L10n.common-busy;
+                                    color: #e2e8f0;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                        brush-area := TouchArea {
+                            width: 100%; height: 100%;
+                            enabled: TileableApi.brush-enabled && TileableApi.has-work && !TileableApi.busy;
+                            mouse-cursor: crosshair;
+                            pointer-event(event) => {
+                                if (event.kind == PointerEventKind.down) {
+                                    TileableApi.brush-at(
+                                        fit-w > 0px ? (brush-area.mouse-x - fit-x) / fit-w : 0,
+                                        fit-h > 0px ? (brush-area.mouse-y - fit-y) / fit-h : 0,
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            right-scroll := ScrollView {
+                width: 300px;
+                GroupBox {
+                    title: L10n.tileable-preview-3x3;
+                    width: right-scroll.visible-width;
+                    VerticalLayout {
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 6px;
+                            if TileableApi.lock-preview : Text {
+                                text: L10n.tileable-locked-preview;
+                                font-size: 10px;
+                                color: #b45309;
+                                wrap: word-wrap;
+                                horizontal-stretch: 1;
+                            }
+                        }
+                        Rectangle {
+                            height: 320px;
+                            background: #f1f5f9;
+                            border-radius: 6px;
+                            Image {
+                                source: TileableApi.preview-3x3;
+                                x: 0; y: 0;
+                                width: parent.width;
+                                height: parent.height;
+                                image-fit: contain;
+                                image-rendering: pixelated;
+                            }
+                            if TileableApi.has-preview && !TileableApi.lock-preview : Text {
+                                text: L10n.common-preview-note;
+                                font-size: 9px;
+                                color: #94a3b8;
+                            }
+                            if !TileableApi.has-preview || TileableApi.lock-preview : Rectangle {
+                                background: rgba(15, 23, 42, TileableApi.lock-preview ? 0.6 : 0.0);
+                                border-radius: 6px;
+                                Text {
+                                    text: TileableApi.lock-preview ? L10n.tileable-locked-preview : L10n.common-no-image;
+                                    color: TileableApi.lock-preview ? #fde68a : #94a3b8;
+                                    font-size: 11px;
+                                    wrap: word-wrap;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

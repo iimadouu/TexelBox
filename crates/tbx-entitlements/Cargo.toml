@@ -1,0 +1,16 @@
+[package]
+name = "tbx-entitlements"
+description = "Central Plan / Capability / EntitlementGate system. Every gated feature must route through EntitlementGate::check() (spec section 3 and 4)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ed25519-dalek = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+directories = { workspace = true }

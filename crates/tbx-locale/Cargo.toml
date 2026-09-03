@@ -1,0 +1,17 @@
+[package]
+name = "tbx-locale"
+description = "Fluent-based localization. All UI copy lives in .ftl files embedded into the binary at build time (spec section 8)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluent-bundle = { workspace = true }
+unic-langid = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+# Same crate instance fluent-bundle uses internally, so the AST Entry type in
+# `entries()` matches (needed by the key-parity tests).
+fluent-syntax = "0.11"

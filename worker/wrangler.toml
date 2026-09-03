@@ -1,0 +1,63 @@
+name = "texelbox-license"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# === Non-secret configuration (vars) =======================================
+# Secrets (never commit — `wrangler secret put <NAME>`):
+#   SUPABASE_SERVICE_ROLE_KEY   # service-role key (bypasses RLS; worker-only)
+#   SUPABASE_ANON_KEY           # used for Auth sign-in
+#   TOKEN_SIGNING_KEY           # 32-byte Ed25519 seed, hex (token signing)
+#   WHOP_API_KEY               # Whop account API key
+#   WHOP_WEBHOOK_SECRET        # Whop webhook signing secret
+#   BREVO_API_KEY               # Brevo SMTP API key
+[vars]
+SUPABASE_URL = "https://anrcbaikbmcitgiyzkas.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmNiYWlrYm1jaXRnaXl6a2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NTQzNzEsImV4cCI6MjEwMzUzMDM3MX0.rfqYVJooCofp06ifcDH8_4GOcenEqkpt0FSd8YeIL_Q"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmNiYWlrYm1jaXRnaXl6a2FzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Nzk1NDM3MSwiZXhwIjoyMTAzNTMwMzcxfQ.suStXYewFYtAo0A2tY_D-weZXI2R_nYYF2Y-vFFiR0E"
+TOKEN_TTL_SECS = "43200"      # entitlement token lifetime (12h; client offline grace is 5d)
+SESSION_TTL_SECS = "86400"    # opaque session lifetime (24h)
+TOKEN_SIGNING_KEY = "1c14e90ebae59d1514e80a278360393f974577ac583d422406dfeaf9044cde57"
+
+# --- whop.com (one-time payments) -------------------------------------------
+
+WHOP_API_KEY = "apik_ViDwUflNm9KtG_C6285561_C_87c06f70eece04ba8f62148c2f9473ca2446c1545ee5c3fa41491e64b001bd"
+WHOP_WEBHOOK_SECRET = "ws_0e1a3258c14e8e6191be48db1a1a1ad454f67f84ef204c32d25559012d8986f1"
+
+
+# --- Whop (one-time payments) -------------------------------------------
+# Plan IDs (not product IDs) - create plans at whop.com/dashboard
+# Run: whop plans create --product-id prod_vHqy3gWrcoN3v --plan-type one-time --initial-price 49.99
+WHOP_PLAN_ID = "plan_5OB5H1H14OXat"
+WHOP_TRIAL_PLAN_ID = "plan_fne2x73a949wL"
+TRIAL_TTL_SECS = "86400"      # 1-day trial
+
+# --- Brevo (verification email via SMTP API, HTTPS-only) --------------------
+# Free tier: 300 emails/day. No OAuth needed — one API key secret.
+
+BREVO_API_KEY = "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"
+BREVO_FROM_EMAIL = "imadedar98@gmail.com"
+BREVO_FROM_NAME = "TexelBox"
+
+# The public URL of this worker (used for verify-link + checkout redirect).
+# On the free plan this is your *.workers.dev subdomain — no custom domain.
+
+APP_PUBLIC_URL = "https://texelbox-license.imadedar98.workers.dev/"
+
+# Auto-update metadata served at GET /app/version (bump on every release):
+LATEST_VERSION = "0.2.0"
+LATEST_DOWNLOAD_URL = "https://github.com/iimadouu/TexelBox/releases/download/v0.1.1/texelbox-v0.1.1.zip"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1

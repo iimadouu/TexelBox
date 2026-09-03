@@ -1,0 +1,254 @@
+import { Button, ComboBox, GroupBox, LineEdit, ScrollView } from "std-widgets.slint";
+import { L10n, PresetsApi } from "../globals.slint";
+import { ProBadge, Divider } from "../widgets.slint";
+component FeatureBadge inherits Rectangle {
+    in property <string> feature;
+    height: 16px;
+    width: ft.preferred-width + 12px;
+    border-radius: 8px;
+    background: feature == "maps"     ? #7c3aed
+              : feature == "tileable" ? #0d9488
+              : feature == "packing"  ? #d97706
+              : feature == "atlas"    ? #0ea5e9
+              : feature == "optimize" ? #2563eb
+              : feature == "batch"    ? #ea580c
+              : feature == "project"  ? #16a34a
+              : #64748b;
+    ft := Text {
+        text: feature;
+        font-size: 9px;
+        font-weight: 700;
+        color: #ffffff;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+component PresetRow inherits Rectangle {
+    in property <string> label;
+    in property <int>    index;
+    in property <string> feature-tag;
+    height: 40px;
+    border-radius: 6px;
+    border-width: PresetsApi.selected == index ? 1px : 0px;
+    border-color: #bae6fd;
+    background: PresetsApi.selected == index
+        ? #e0f2fe
+        : touch.has-hover ? #f1f5f9
+        : transparent;
+    animate background   { duration: 80ms; }
+    animate border-width { duration: 80ms; }
+    touch := TouchArea {
+        width: 100%; height: 100%;
+        clicked => { PresetsApi.select-preset(index); }
+        double-clicked => {
+            PresetsApi.select-preset(index);
+            PresetsApi.apply-preset();
+        }
+    }
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 8px;
+        FeatureBadge {
+            feature: feature-tag;
+            y: (parent.height - 16px) / 2;
+        }
+        Text {
+            text: label;
+            font-size: 12px;
+            color: PresetsApi.selected == index ? #0369a1 : #0f172a;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+            animate color { duration: 80ms; }
+        }
+        if touch.has-hover && PresetsApi.selected != index : Text {
+            text: "↵ apply";
+            font-size: 9px;
+            color: #94a3b8;
+            vertical-alignment: center;
+        }
+    }
+}
+export component PresetsPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.presets-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.presets-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 400px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.presets-save-section;
+                        VerticalLayout {
+                            spacing: 8px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Text {
+                                    text: L10n.presets-save-feature;
+                                    font-size: 11px;
+                                    color: #475569;
+                                    vertical-alignment: center;
+                                    width: 110px;
+                                }
+                                ComboBox {
+                                    horizontal-stretch: 1;
+                                    model: [
+                                        L10n.presets-feature-maps,
+                                        L10n.presets-feature-tileable,
+                                        L10n.presets-feature-packing,
+                                        L10n.presets-feature-atlas,
+                                        L10n.presets-feature-optimize,
+                                        L10n.presets-feature-batch,
+                                        L10n.presets-feature-project,
+                                    ];
+                                    current-index <=> PresetsApi.save-feature;
+                                }
+                            }
+                            LineEdit {
+                                text <=> PresetsApi.preset-name;
+                                placeholder-text: L10n.presets-name-placeholder;
+                            }
+                            Button {
+                                text: L10n.presets-save;
+                                primary: PresetsApi.preset-name != "";
+                                enabled: PresetsApi.preset-name != "";
+                                clicked => { PresetsApi.save-preset(); }
+                            }
+                            if PresetsApi.lock-unlimited : HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: true; }
+                                Text {
+                                    text: L10n.presets-locked-unlimited;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            Text {
+                                text: L10n.presets-hint;
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.presets-export;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Button {
+                                    text: L10n.presets-export;
+                                    enabled: !PresetsApi.lock-export && PresetsApi.selected >= 0;
+                                    clicked => { PresetsApi.export-preset(); }
+                                }
+                                Button {
+                                    text: L10n.presets-import;
+                                    enabled: !PresetsApi.lock-export;
+                                    clicked => { PresetsApi.import-preset(); }
+                                }
+                            }
+                            if PresetsApi.lock-export : HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: true; }
+                                Text {
+                                    text: L10n.presets-locked-export;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                        }
+                    }
+                    if PresetsApi.status != "" : Text {
+                        text: PresetsApi.status;
+                        font-size: 11px;
+                        color: #0369a1;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            browser-scroll := ScrollView {
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: browser-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.presets-browser-section;
+                        VerticalLayout {
+                            spacing: 4px;
+                            if PresetsApi.preset-list.length == 0 : VerticalLayout {
+                                alignment: center;
+                                spacing: 6px;
+                                padding: 16px;
+                                Text {
+                                    text: "📋";
+                                    font-size: 24px;
+                                    horizontal-alignment: center;
+                                }
+                                Text {
+                                    text: L10n.presets-empty;
+                                    font-size: 12px;
+                                    color: #64748b;
+                                    wrap: word-wrap;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                            for row in PresetsApi.preset-list : PresetRow {
+                                label: row.label;
+                                index: row.index;
+                                feature-tag: row.feature;
+                            }
+                            Divider {}
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Button {
+                                    text: L10n.presets-apply;
+                                    primary: PresetsApi.selected >= 0;
+                                    enabled: PresetsApi.selected >= 0;
+                                    clicked => { PresetsApi.apply-preset(); }
+                                }
+                                Button {
+                                    text: L10n.presets-delete;
+                                    enabled: PresetsApi.selected >= 0;
+                                    clicked => { PresetsApi.delete-preset(); }
+                                }
+                                Text {
+                                    text: "or double-click a row to apply";
+                                    font-size: 10px;
+                                    color: #94a3b8;
+                                    vertical-alignment: center;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

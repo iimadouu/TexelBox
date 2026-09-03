@@ -1,0 +1,354 @@
+import { Button, ComboBox, GroupBox, ProgressIndicator, ScrollView, Slider, LineEdit } from "std-widgets.slint";
+import { L10n, OptimizeApi } from "../globals.slint";
+import { ProBadge, Divider } from "../widgets.slint";
+component ParamCombo inherits Rectangle {
+    in property <string>   label;
+    in property <[string]> model;
+    in-out property <int>  index;
+    in property <bool>     control-enabled: true;
+    callback changed;
+    height: row.preferred-height;
+    row := HorizontalLayout {
+        spacing: 8px;
+        Text {
+            text: label;
+            font-size: 11px;
+            color: control-enabled ? #475569 : #94a3b8;
+            vertical-alignment: center;
+            width: 120px;
+            animate color { duration: 80ms; }
+        }
+        ComboBox {
+            horizontal-stretch: 1;
+            model: root.model;
+            current-index <=> index;
+            enabled: control-enabled;
+            selected => { root.changed(); }
+        }
+    }
+}
+export component OptimizePanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.optimize-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.optimize-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if OptimizeApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 440px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.optimize-source-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            ComboBox {
+                                model: [
+                                    L10n.optimize-src-custom,
+                                    L10n.optimize-src-source,
+                                    L10n.optimize-src-tileable,
+                                    L10n.optimize-src-normal,
+                                    L10n.optimize-src-height,
+                                    L10n.optimize-src-roughness,
+                                    L10n.optimize-src-ao,
+                                    L10n.optimize-src-packed,
+                                    L10n.optimize-src-atlas,
+                                ];
+                                current-index <=> OptimizeApi.source-index;
+                                enabled: !OptimizeApi.busy;
+                                selected => { OptimizeApi.update-preview(); }
+                            }
+                            Button {
+                                text: L10n.optimize-open-custom;
+                                enabled: !OptimizeApi.busy;
+                                clicked => { OptimizeApi.open-custom(); }
+                            }
+                            if OptimizeApi.source-info != "" : Text {
+                                text: OptimizeApi.source-info;
+                                font-size: 11px;
+                                color: #475569;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.optimize-resolution-section;
+                        VerticalLayout {
+                            spacing: 8px;
+                            ParamCombo {
+                                label: L10n.optimize-param-target-size;
+                                model: [
+                                    L10n.optimize-size-original,
+                                    L10n.optimize-size-64,
+                                    L10n.optimize-size-128,
+                                    L10n.optimize-size-256,
+                                    L10n.optimize-size-512,
+                                    L10n.optimize-size-1024,
+                                    L10n.optimize-size-2048,
+                                    L10n.optimize-size-4096,
+                                ];
+                                index <=> OptimizeApi.size-index;
+                                control-enabled: !OptimizeApi.busy;
+                                changed => { OptimizeApi.update-preview(); }
+                            }
+                            ParamCombo {
+                                label: L10n.optimize-param-snap;
+                                model: [
+                                    L10n.optimize-snap-none,
+                                    L10n.optimize-snap-nearest,
+                                    L10n.optimize-snap-up,
+                                    L10n.optimize-snap-down,
+                                ];
+                                index <=> OptimizeApi.snap-index;
+                                control-enabled: !OptimizeApi.busy;
+                                changed => { OptimizeApi.update-preview(); }
+                            }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: OptimizeApi.lock-resampling; }
+                                if OptimizeApi.lock-resampling : Text {
+                                    text: L10n.optimize-locked-resampling;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            ParamCombo {
+                                label: L10n.optimize-param-resampling;
+                                model: [
+                                    L10n.optimize-resampling-bilinear,
+                                    L10n.optimize-resampling-bicubic,
+                                    L10n.optimize-resampling-lanczos,
+                                ];
+                                index <=> OptimizeApi.resampling-index;
+                                control-enabled: !OptimizeApi.lock-resampling && !OptimizeApi.busy;
+                                changed => { OptimizeApi.update-preview(); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.optimize-format-section;
+                        VerticalLayout {
+                            spacing: 8px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: OptimizeApi.lock-dds; }
+                                if OptimizeApi.lock-dds : Text {
+                                    text: L10n.optimize-locked-dds;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            ParamCombo {
+                                label: L10n.optimize-param-format;
+                                model: [
+                                    L10n.optimize-format-png,
+                                    L10n.optimize-format-tga,
+                                    L10n.optimize-format-dds,
+                                ];
+                                index <=> OptimizeApi.format-index;
+                                control-enabled: !OptimizeApi.busy;
+                                changed => { OptimizeApi.update-preview(); }
+                            }
+                            if OptimizeApi.format-index == 2 : VerticalLayout {
+                                spacing: 8px;
+                                ParamCombo {
+                                    label: L10n.optimize-param-bc;
+                                    model: [
+                                        L10n.optimize-bc-1,
+                                        L10n.optimize-bc-3,
+                                        L10n.optimize-bc-5,
+                                        L10n.optimize-bc-7,
+                                    ];
+                                    index <=> OptimizeApi.bc-index;
+                                    control-enabled: !OptimizeApi.lock-dds && !OptimizeApi.busy;
+                                }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Text {
+                                        text: L10n.optimize-dds-quality;
+                                        font-size: 11px;
+                                        color: OptimizeApi.lock-dds ? #94a3b8 : #475569;
+                                        vertical-alignment: center;
+                                        width: 120px;
+                                        animate color { duration: 80ms; }
+                                    }
+                                    Slider {
+                                        horizontal-stretch: 1;
+                                        minimum: 0.0; maximum: 1.0;
+                                        value <=> OptimizeApi.dds-quality;
+                                        enabled: !OptimizeApi.lock-dds && !OptimizeApi.busy;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.optimize-naming-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: OptimizeApi.lock-template; }
+                                if OptimizeApi.lock-template : Text {
+                                    text: L10n.optimize-locked-template;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: L10n.optimize-param-template;
+                                    font-size: 11px;
+                                    color: #475569;
+                                    vertical-alignment: center;
+                                    width: 120px;
+                                }
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                    height: 30px;
+                                    background: #ffffff;
+                                    border-width: 1px;
+                                    border-color: OptimizeApi.lock-template ? #e2e8f0 : #94a3b8;
+                                    border-radius: 4px;
+                                    LineEdit {
+                                        text <=> OptimizeApi.name-template;
+                                        enabled: !OptimizeApi.lock-template;
+                                        font-size: 12px;
+                                        width: 100%; height: 100%;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.common-export;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Button {
+                                text: L10n.optimize-export;
+                                primary: OptimizeApi.has-preview && !OptimizeApi.busy;
+                                enabled: !OptimizeApi.busy;
+                                clicked => { OptimizeApi.export-selected(); }
+                            }
+                            Button {
+                                text: L10n.optimize-export-all;
+                                enabled: !OptimizeApi.busy;
+                                clicked => { OptimizeApi.export-all(); }
+                            }
+                            if OptimizeApi.status != "" : Text {
+                                text: OptimizeApi.status;
+                                font-size: 11px;
+                                color: #0369a1;
+                                wrap: word-wrap;
+                            }
+                            Text {
+                                text: L10n.optimize-hint;
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.optimize-preview;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 6px;
+                    if OptimizeApi.preview-info != "" : Text {
+                        text: OptimizeApi.preview-info;
+                        font-size: 11px;
+                        color: #475569;
+                    }
+                    if OptimizeApi.size-estimate != "" : Text {
+                        text: OptimizeApi.size-estimate;
+                        font-size: 11px;
+                        color: #64748b;
+                    }
+                    preview-rect := Rectangle {
+                        vertical-stretch: 1;
+                        min-height: 420px;
+                        background: #111827;
+                        border-radius: 8px;
+                        Image {
+                            source: OptimizeApi.preview;
+                            x: 0; y: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                        if !OptimizeApi.has-preview && !OptimizeApi.busy : VerticalLayout {
+                            alignment: center;
+                            spacing: 6px;
+                            Text {
+                                text: "🔍";
+                                font-size: 28px;
+                                horizontal-alignment: center;
+                            }
+                            Text {
+                                text: L10n.common-no-image;
+                                color: #475569;
+                                font-size: 12px;
+                                horizontal-alignment: center;
+                            }
+                        }
+                        if OptimizeApi.busy : Rectangle {
+                            background: rgba(15, 23, 42, 0.55);
+                            border-radius: 8px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 8px;
+                                ProgressIndicator {
+                                    indeterminate: true;
+                                    width: 36px; height: 36px;
+                                }
+                                Text {
+                                    text: L10n.common-busy;
+                                    color: #e2e8f0;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                        if OptimizeApi.has-preview : Text {
+                            text: L10n.common-preview-note;
+                            font-size: 10px;
+                            color: #94a3b8;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

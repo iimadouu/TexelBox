@@ -1,0 +1,53 @@
+# ── Everything except the Rust crates source ─────────────────────────────────
+# Only crates/ is published to GitHub.
+
+# Rust build output
+/target/
+/dist/
+
+# Secrets
+.env
+.env.local
+.env.production
+
+# Worker
+/worker/
+
+# Installer scripts & output
+/installer/
+/scripts/
+
+# Docs (internal)
+/docs/
+
+# IDE & OS
+.vscode/
+.idea/
+*.suo
+*.user
+Thumbs.db
+.DS_Store
+
+# Kiro AI session data
+.kiro/
+
+# Internal project tracking files
+agent-spec.md
+progress.md
+UI issues.md
+build.tes.command.md
+changelog.md
+.cta.json
+dcc.md
+com.py
+
+
+# Cargo.lock is committed for binary crates (reproducible builds)
+# Cargo.lock
+
+# wrangler
+wrangler.toml
+wrangler.toml.example
+
+#docs
+/docs

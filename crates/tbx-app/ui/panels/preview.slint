@@ -1,0 +1,300 @@
+import { Button, ComboBox, GroupBox, ProgressIndicator, ScrollView } from "std-widgets.slint";
+import { L10n, PreviewApi } from "../globals.slint";
+import { ProBadge, Divider } from "../widgets.slint";
+component GeoButton inherits Rectangle {
+    in property <string> label;
+    in property <bool>   active;
+    in property <bool>   control-enabled: true;
+    callback clicked;
+    height: 32px;
+    horizontal-stretch: 1;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: active ? #0ea5e9
+                : touch.has-hover && control-enabled ? #94a3b8
+                : #e2e8f0;
+    background: active ? #e0f2fe
+              : touch.has-hover && control-enabled ? #f8fafc
+              : #ffffff;
+    animate background   { duration: 100ms; }
+    animate border-color { duration: 100ms; }
+    touch := TouchArea {
+        width: 100%; height: 100%;
+        enabled: control-enabled;
+        mouse-cursor: control-enabled ? pointer : not-allowed;
+        clicked => { root.clicked(); }
+    }
+    Text {
+        text: label;
+        font-size: 12px;
+        font-weight: active ? 700 : 400;
+        color: active ? #0369a1
+             : control-enabled ? #374151
+             : #94a3b8;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        animate color { duration: 100ms; }
+    }
+}
+component WarningRow inherits Rectangle {
+    in property <int>    level;
+    in property <string> msg;
+    height: row.preferred-height + 6px;
+    border-radius: 4px;
+    background: level == 2 ? #fef2f2
+              : level == 1 ? #fffbeb
+              : #eff6ff;
+    border-width: 1px;
+    border-color: level == 2 ? #fca5a5
+                : level == 1 ? #fcd34d
+                : #93c5fd;
+    row := HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        spacing: 6px;
+        Text {
+            text: level == 2 ? "✕" : level == 1 ? "⚠" : "ℹ";
+            font-size: 12px;
+            color: level == 2 ? #dc2626 : level == 1 ? #d97706 : #2563eb;
+            vertical-alignment: center;
+        }
+        Text {
+            text: msg;
+            font-size: 11px;
+            color: level == 2 ? #991b1b : level == 1 ? #92400e : #1d4ed8;
+            wrap: word-wrap;
+            horizontal-stretch: 1;
+            vertical-alignment: center;
+        }
+    }
+}
+export component PreviewPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.preview-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.preview-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if PreviewApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 370px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.preview-geometry-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 8px;
+                                GeoButton {
+                                    label: L10n.preview-geometry-plane;
+                                    active: PreviewApi.geometry == 0;
+                                    clicked => { PreviewApi.select-geometry(0); }
+                                }
+                                GeoButton {
+                                    label: L10n.preview-geometry-sphere;
+                                    active: PreviewApi.geometry == 1;
+                                    control-enabled: !PreviewApi.lock-sphere;
+                                    clicked => { PreviewApi.select-geometry(1); }
+                                }
+                            }
+                            if PreviewApi.lock-sphere : HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: true; }
+                                Text {
+                                    text: L10n.preview-locked-sphere;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.preview-lighting-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            ComboBox {
+                                model: [
+                                    L10n.preview-light-studio,
+                                    L10n.preview-light-sun,
+                                    L10n.preview-light-rim,
+                                ];
+                                current-index <=> PreviewApi.lighting-index;
+                                enabled: !PreviewApi.lock-lighting;
+                                selected => { PreviewApi.select-lighting(PreviewApi.lighting-index); }
+                            }
+                            if PreviewApi.lock-lighting : HorizontalLayout {
+                                spacing: 6px;
+                                ProBadge { locked: true; }
+                                Text {
+                                    text: L10n.preview-locked-lighting;
+                                    font-size: 10px;
+                                    color: #b45309;
+                                    wrap: word-wrap;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.preview-warnings-section;
+                        VerticalLayout {
+                            spacing: 4px;
+                            if PreviewApi.warnings.length == 0 : Text {
+                                text: L10n.preview-warnings-none;
+                                font-size: 12px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                            for w in PreviewApi.warnings : WarningRow {
+                                level: w.level;
+                                msg: w.text;
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: L10n.preview-actions-section;
+                        VerticalLayout {
+                            spacing: 6px;
+                            Button {
+                                text: L10n.preview-refresh;
+                                primary: !PreviewApi.has-preview && !PreviewApi.busy;
+                                enabled: !PreviewApi.busy;
+                                clicked => { PreviewApi.refresh(); }
+                            }
+                            if PreviewApi.status != "" : Text {
+                                text: PreviewApi.status;
+                                font-size: 11px;
+                                color: PreviewApi.has-preview && !PreviewApi.busy
+                                    ? #15803d : #0369a1;
+                                wrap: word-wrap;
+                                animate color { duration: 200ms; }
+                            }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.preview-viewport;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: L10n.preview-hint;
+                        font-size: 10px;
+                        color: #94a3b8;
+                        wrap: word-wrap;
+                    }
+                    viewport := Rectangle {
+                        vertical-stretch: 1;
+                        min-height: 420px;
+                        background: #0c1220;
+                        border-radius: 8px;
+                        border-width: PreviewApi.busy ? 2px : 1px;
+                        border-color: PreviewApi.busy ? #f59e0b : #1e293b;
+                        animate border-color { duration: 200ms; }
+                        animate border-width  { duration: 200ms; }
+                        Image {
+                            source: PreviewApi.preview;
+                            x: 0; y: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                        if !PreviewApi.has-preview && !PreviewApi.busy : VerticalLayout {
+                            alignment: center;
+                            spacing: 8px;
+                            Text {
+                                text: "🌐";
+                                font-size: 36px;
+                                horizontal-alignment: center;
+                            }
+                            Text {
+                                text: L10n.preview-status-ready;
+                                color: #475569;
+                                font-size: 12px;
+                                horizontal-alignment: center;
+                            }
+                        }
+                        if PreviewApi.busy : Rectangle {
+                            background: rgba(12, 18, 32, 0.65);
+                            border-radius: 8px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 10px;
+                                ProgressIndicator {
+                                    indeterminate: true;
+                                    width: 40px; height: 40px;
+                                }
+                                Text {
+                                    text: L10n.common-busy;
+                                    color: #cbd5e1;
+                                    font-size: 13px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                        if PreviewApi.has-preview : Text {
+                            text: L10n.common-preview-note;
+                            font-size: 9px;
+                            color: #475569;
+                        }
+                        view-touch := TouchArea {
+                            width: 100%; height: 100%;
+                            enabled: PreviewApi.has-preview && !PreviewApi.busy;
+                            mouse-cursor: PreviewApi.geometry == 1 ? crosshair : default;
+                            property <length> last-x;
+                            property <length> last-y;
+                            pointer-event(event) => {
+                                if (event.kind == PointerEventKind.down) {
+                                    view-touch.last-x = view-touch.mouse-x;
+                                    view-touch.last-y = view-touch.mouse-y;
+                                }
+                            }
+                            moved => {
+                                if (view-touch.pressed) {
+                                    PreviewApi.drag-view(
+                                        (view-touch.mouse-x - view-touch.last-x) / 1px,
+                                        (view-touch.mouse-y - view-touch.last-y) / 1px,
+                                    );
+                                    view-touch.last-x = view-touch.mouse-x;
+                                    view-touch.last-y = view-touch.mouse-y;
+                                }
+                            }
+                            scroll-event(event) => {
+                                PreviewApi.zoom-view(event.delta-y / 1px);
+                                return accept;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,35 @@
+import { ScrollView } from "std-widgets.slint";
+import { L10n } from "../globals.slint";
+export component StubPanel inherits Rectangle {
+    in property <string> title;
+    in property <string> description;
+    in property <string> phase-label;
+    ScrollView {
+        VerticalLayout {
+            alignment: center;
+            padding: 40px;
+        Text {
+            text: title;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: phase-label;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0284c7;
+            horizontal-alignment: center;
+        }
+        Rectangle { height: 12px; }
+            Text {
+                text: description;
+                font-size: 13px;
+                color: #475569;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+    }
+}

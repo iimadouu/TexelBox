@@ -1,0 +1,118 @@
+import { Slider } from "std-widgets.slint";
+import { L10n } from "globals.slint";
+export component ProBadge inherits Rectangle {
+    in property <bool> locked: true;
+    width: 34px;
+    height: 16px;
+    border-radius: 4px;
+    background: locked
+        ? (touch.has-hover ? #f59e0b : #d97706)
+        : #16a34a;
+    animate background { duration: 120ms; }
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        mouse-cursor: locked ? not-allowed : default;
+    }
+    Text {
+        text: L10n.common-pro-badge;
+        font-size: 9px;
+        font-weight: 700;
+        color: #0f172a;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+export component Divider inherits Rectangle {
+    height: 1px;
+    background: #e2e8f0;
+}
+export component StatusPill inherits Rectangle {
+    in property <string> label;
+    in property <int> level: 0;
+    height: 18px;
+    width: pill-text.preferred-width + 14px;
+    border-radius: 9px;
+    background: level == 1 ? #dcfce7
+               : level == 2 ? #fef3c7
+               : level == 3 ? #fee2e2
+               : #f1f5f9;
+    pill-text := Text {
+        text: label;
+        font-size: 10px;
+        font-weight: 600;
+        color: level == 1 ? #15803d
+              : level == 2 ? #92400e
+              : level == 3 ? #b91c1c
+              : #475569;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+export component ParamSlider inherits Rectangle {
+    in property <string> label;
+    in property <float> min;
+    in property <float> max;
+    in-out property <float> value;
+    in property <bool> control-enabled: true;
+    in property <bool> integer-display: false;
+    height: col.preferred-height;
+    col := VerticalLayout {
+        spacing: 2px;
+        HorizontalLayout {
+            Text {
+                text: label;
+                font-size: 11px;
+                color: control-enabled ? #475569 : #94a3b8;
+                animate color { duration: 80ms; }
+            }
+            Text {
+                text: integer-display
+                    ? round(root.value)
+                    : (round(root.value * 100) / 100);
+                font-size: 11px;
+                font-weight: 600;
+                color: control-enabled ? #0f172a : #94a3b8;
+                horizontal-alignment: right;
+                horizontal-stretch: 1;
+                animate color { duration: 80ms; }
+            }
+        }
+        Slider {
+            minimum: min;
+            maximum: max;
+            value <=> root.value;
+            enabled: control-enabled;
+        }
+    }
+}
+export component IconButton inherits Rectangle {
+    in property <string> icon;
+    in property <bool> control-enabled: true;
+    callback clicked;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: control-enabled && touch.has-hover ? #94a3b8 : #e2e8f0;
+    background: control-enabled && touch.pressed ? #e2e8f0
+              : control-enabled && touch.has-hover ? #f8fafc
+              : transparent;
+    animate background { duration: 80ms; }
+    animate border-color { duration: 80ms; }
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        enabled: control-enabled;
+        mouse-cursor: control-enabled ? pointer : not-allowed;
+        clicked => { root.clicked(); }
+    }
+    Text {
+        text: icon;
+        font-size: 13px;
+        color: control-enabled ? #334155 : #cbd5e1;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        animate color { duration: 80ms; }
+    }
+}

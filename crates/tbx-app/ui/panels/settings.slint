@@ -1,0 +1,225 @@
+import { Button, GroupBox, LineEdit, ScrollView } from "std-widgets.slint";
+import { L10n, Session, SettingsApi } from "../globals.slint";
+export component SettingsPanel inherits Rectangle {
+    ScrollView {
+        VerticalLayout {
+            padding: 16px;
+            spacing: 12px;
+            Text {
+                text: L10n.settings-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            if Session.update-available : Rectangle {
+                height: 64px;
+                border-radius: 6px;
+                background: #fef3c7;
+                border-color: #f59e0b;
+                border-width: 1px;
+                HorizontalLayout {
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    spacing: 10px;
+                    Text {
+                        horizontal-stretch: 1;
+                        text: Session.update-note;
+                        font-size: 12px;
+                        color: #92400e;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                        wrap: word-wrap;
+                    }
+                    Button {
+                        text: L10n.update-open-download;
+                        primary: true;
+                        clicked => { SettingsApi.open-update-page(); }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.update-check-title;
+                height: 92px;
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: SettingsApi.update-check-status;
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        if Session.update-available : Button {
+                            text: L10n.update-open-download;
+                            primary: true;
+                            enabled: !SettingsApi.checking-updates;
+                            clicked => { SettingsApi.open-update-page(); }
+                        }
+                        Button {
+                            text: L10n.update-check-button;
+                            primary: !Session.update-available;
+                            enabled: !SettingsApi.checking-updates;
+                            clicked => { SettingsApi.check-for-updates(); }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.settings-language;
+                height: 120px;
+                VerticalLayout {
+                    spacing: 6px;
+                    Text { text: L10n.settings-language; font-size: 12px; color: #475569; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: "English";
+                            primary: SettingsApi.language-index == 0;
+                            clicked => { SettingsApi.language-changed(0); }
+                        }
+                        Button {
+                            text: "Español";
+                            primary: SettingsApi.language-index == 1;
+                            clicked => { SettingsApi.language-changed(1); }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.settings-license;
+                height: 280px;
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: Session.plan-label;
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: Session.is-trial ? #d97706 : Session.is-pro ? #16a34a : #0f172a;
+                    }
+                    if Session.is-trial : Text {
+                        text: Session.trial-expires;
+                        font-size: 11px;
+                        color: #d97706;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: "Build: " + SettingsApi.build-plan;
+                        font-size: 11px;
+                        color: #64748b;
+                    }
+                    Text {
+                        text: L10n.settings-enter-details;
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: L10n.settings-email;
+                            font-size: 11px;
+                            color: #475569;
+                            vertical-alignment: center;
+                            width: 90px;
+                        }
+                        LineEdit {
+                            horizontal-stretch: 1;
+                            text <=> SettingsApi.license-email;
+                            enabled: !SettingsApi.activating;
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: L10n.settings-password;
+                            font-size: 11px;
+                            color: #475569;
+                            vertical-alignment: center;
+                            width: 90px;
+                        }
+                        LineEdit {
+                            horizontal-stretch: 1;
+                            text <=> SettingsApi.license-password;
+                            enabled: !SettingsApi.activating;
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: L10n.settings-license-key;
+                            font-size: 11px;
+                            color: #475569;
+                            vertical-alignment: center;
+                            width: 90px;
+                        }
+                        LineEdit {
+                            horizontal-stretch: 1;
+                            text <=> SettingsApi.license-key-input;
+                            enabled: !SettingsApi.activating;
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: L10n.settings-activate;
+                            primary: true;
+                            enabled: !SettingsApi.activating;
+                            clicked => { SettingsApi.activate-license(); }
+                        }
+                        Button {
+                            text: L10n.settings-deactivate;
+                            enabled: !SettingsApi.activating && Session.is-pro;
+                            clicked => { SettingsApi.deactivate-license(); }
+                        }
+                    }
+                    if !Session.is-pro : HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: L10n.settings-buy-pro;
+                            primary: true;
+                            clicked => { SettingsApi.open-server-url("/pricing"); }
+                        }
+                    }
+                    Text {
+                        text: SettingsApi.license-status;
+                        font-size: 11px;
+                        color: #0369a1;
+                        wrap: word-wrap;
+                    }
+                    if Session.dev-mode : HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: L10n.settings-dev-unlock;
+                            clicked => { SettingsApi.dev-toggle-license(); }
+                        }
+                    }
+                }
+            }
+            GroupBox {
+                title: L10n.settings-manage-billing;
+                height: 120px;
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: L10n.settings-account-help;
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: L10n.settings-create-account;
+                            clicked => { SettingsApi.open-server-url("/signup"); }
+                        }
+                        Button {
+                            text: L10n.settings-manage-billing;
+                            clicked => { SettingsApi.open-server-url("/account"); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,199 @@
+import { Button, GroupBox, ProgressIndicator, ScrollView } from "std-widgets.slint";
+import { L10n, EngineProfilesApi } from "../globals.slint";
+import { ProBadge, Divider } from "../widgets.slint";
+export component EngineProfilesPanel inherits Rectangle {
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: L10n.engine-title;
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            Text {
+                text: L10n.engine-subtitle;
+                font-size: 12px;
+                color: #64748b;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            if EngineProfilesApi.busy : ProgressIndicator {
+                indeterminate: true;
+                width: 120px;
+                height: 4px;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+            left-scroll := ScrollView {
+                width: 320px;
+                VerticalLayout {
+                    spacing: 10px;
+                    width: left-scroll.visible-width;
+                    GroupBox {
+                        title: L10n.maps-source-section;
+                        VerticalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: EngineProfilesApi.source-name;
+                                font-size: 11px;
+                                color: #334155;
+                                wrap: char-wrap;
+                            }
+                            Button {
+                                text: L10n.engine-open-source;
+                                enabled: !EngineProfilesApi.busy;
+                                clicked => { EngineProfilesApi.open-source(); }
+                            }
+                        }
+                    }
+                    Divider {}
+                    HorizontalLayout {
+                        spacing: 6px;
+                        ProBadge { locked: EngineProfilesApi.lock-profiles; }
+                        if EngineProfilesApi.lock-profiles : Text {
+                            text: L10n.engine-locked;
+                            font-size: 10px;
+                            color: #b45309;
+                            wrap: word-wrap;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    GroupBox {
+                        title: "Unreal Engine 5";
+                        VerticalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: "ORM pack · T_{name}_D / T_{name}_ORM / T_{name}_N";
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                            Button {
+                                text: L10n.engine-export-unreal5;
+                                primary: EngineProfilesApi.has-source && !EngineProfilesApi.lock-profiles;
+                                enabled: EngineProfilesApi.has-source
+                                    && !EngineProfilesApi.lock-profiles
+                                    && !EngineProfilesApi.busy;
+                                clicked => { EngineProfilesApi.export-unreal5(); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: "Unity HDRP";
+                        VerticalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: "Mask: R=Metallic G=AO B=Detail A=Smooth";
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                            Button {
+                                text: L10n.engine-export-unity-hdrp;
+                                primary: EngineProfilesApi.has-source && !EngineProfilesApi.lock-profiles;
+                                enabled: EngineProfilesApi.has-source
+                                    && !EngineProfilesApi.lock-profiles
+                                    && !EngineProfilesApi.busy;
+                                clicked => { EngineProfilesApi.export-unity-hdrp(); }
+                            }
+                        }
+                    }
+                    GroupBox {
+                        title: "Godot 4";
+                        VerticalLayout {
+                            spacing: 6px;
+                            Text {
+                                text: "Standard PBR: {name}_albedo / {name}_normal / {name}_roughness / {name}_ao";
+                                font-size: 10px;
+                                color: #64748b;
+                                wrap: word-wrap;
+                            }
+                            Button {
+                                text: L10n.engine-export-godot4;
+                                primary: EngineProfilesApi.has-source && !EngineProfilesApi.lock-profiles;
+                                enabled: EngineProfilesApi.has-source
+                                    && !EngineProfilesApi.lock-profiles
+                                    && !EngineProfilesApi.busy;
+                                clicked => { EngineProfilesApi.export-godot4(); }
+                            }
+                        }
+                    }
+                    if EngineProfilesApi.status != "" : Text {
+                        text: EngineProfilesApi.status;
+                        font-size: 11px;
+                        color: #0369a1;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            GroupBox {
+                title: "How it works";
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 12px;
+                    padding: 8px;
+                    Text {
+                        text: "1. Open a source image (albedo / diffuse).";
+                        font-size: 12px;
+                        color: #334155;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: "2. Maps are generated automatically (normal, height, roughness, AO).";
+                        font-size: 12px;
+                        color: #334155;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: "3. Click the engine button — channels are packed, files named, and the folder is opened.";
+                        font-size: 12px;
+                        color: #334155;
+                        wrap: word-wrap;
+                    }
+                    Divider {}
+                    Text {
+                        text: "Unreal 5 output";
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    }
+                    Text {
+                        text: "  T_{name}_D.png   — albedo (source)\n  T_{name}_ORM.png — R=AO · G=Roughness · B=Metallic\n  T_{name}_N.png   — normal map";
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: "Unity HDRP output";
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    }
+                    Text {
+                        text: "  {name}_Albedo.png\n  {name}_MaskMap.png  — R=Metallic · G=AO · B=Detail · A=Smooth\n  {name}_NormalMap.png";
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: "Godot 4 output";
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    }
+                    Text {
+                        text: "  {name}_albedo.png\n  {name}_normal.png\n  {name}_roughness.png\n  {name}_ao.png";
+                        font-size: 11px;
+                        color: #475569;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+    }
+}

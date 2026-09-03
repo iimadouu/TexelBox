@@ -1,0 +1,44 @@
+﻿[package]
+name = "tbx-app"
+description = "TexelBox desktop application: Slint native UI wired to tbx-core algorithms through the central EntitlementGate and shared project state."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Shipped executable name.
+[[bin]]
+name = "texelbox"
+path = "src/main.rs"
+
+[dependencies]
+slint = { workspace = true }
+# Decoding the Win32 HWND from slint::Window::window_handle() (title-bar
+# minimize/maximize button removal, main.rs).
+raw-window-handle = "0.6"
+winit = { workspace = true }
+image = { workspace = true }
+rfd = { workspace = true }
+fluent-bundle = { workspace = true }
+wgpu = { workspace = true }
+bytemuck = { workspace = true }
+pollster = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+directories = { workspace = true }
+chrono = { workspace = true }
+ureq = { version = "2", features = ["json"] }
+open = "5"
+sha2 = "0.10"
+tbx-core = { path = "../tbx-core" }
+tbx-entitlements = { path = "../tbx-entitlements" }
+tbx-locale = { path = "../tbx-locale" }
+tbx-state = { path = "../tbx-state" }
+
+[build-dependencies]
+slint-build = { workspace = true }
+# Embeds the Windows app icon + version info into the .exe manifest.
+# Only active on Windows; ignored on other platforms.
+winres = "0.1"
+
+
